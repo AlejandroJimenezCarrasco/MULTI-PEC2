@@ -1,18 +1,21 @@
 fileFormatVersion: 2
 guid: 3d7fe0a26ba72d949874021dc3d6995e
-timeCreated: 1432116480
-licenseType: Store
 TrueTypeFontImporter:
-  serializedVersion: 2
-  fontSize: 16
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 17
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontNames:
+  - Bowlby One
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
   userData: 
   assetBundleName: 
   assetBundleVariant: 
