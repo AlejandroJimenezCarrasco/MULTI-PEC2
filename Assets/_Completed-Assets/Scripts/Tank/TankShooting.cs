@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using Mirror;
+
 
 namespace Complete
 {
-    public class TankShooting : MonoBehaviour
+    public class TankShooting : NetworkBehaviour
     {
         public int m_PlayerNumber = 1;              // Used to identify the different players.
         public Rigidbody m_Shell;                   // Prefab of the shell.
@@ -43,44 +45,47 @@ namespace Complete
 
         private void Update ()
         {
-            // The slider should have a default value of the minimum launch force.
-            m_AimSlider.value = m_MinLaunchForce;
+            if (isLocalPlayer)
+            {
+                // The slider should have a default value of the minimum launch force.
+                m_AimSlider.value = m_MinLaunchForce;
 
-            // If the max force has been exceeded and the shell hasn't yet been launched...
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
-            {
-                // ... use the max force and launch the shell.
-                m_CurrentLaunchForce = m_MaxLaunchForce;
-                Fire ();
-            }
-            // Otherwise, if the fire button has just started being pressed...
-            else if (Input.GetButtonDown (m_FireButton))
-            {
-                // ... reset the fired flag and reset the launch force.
-                m_Fired = false;
-                m_CurrentLaunchForce = m_MinLaunchForce;
+                // If the max force has been exceeded and the shell hasn't yet been launched...
+                if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+                {
+                    // ... use the max force and launch the shell.
+                    m_CurrentLaunchForce = m_MaxLaunchForce;
+                    Fire ();
+                }
+                // Otherwise, if the fire button has just started being pressed...
+                else if (Input.GetButtonDown (m_FireButton))
+                {
+                    // ... reset the fired flag and reset the launch force.
+                    m_Fired = false;
+                    m_CurrentLaunchForce = m_MinLaunchForce;
 
-                // Change the clip to the charging clip and start it playing.
-                m_ShootingAudio.clip = m_ChargingClip;
-                m_ShootingAudio.Play ();
-            }
-            // Otherwise, if the fire button is being held and the shell hasn't been launched yet...
-            else if (Input.GetButton (m_FireButton) && !m_Fired)
-            {
-                // Increment the launch force and update the slider.
-                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
+                    // Change the clip to the charging clip and start it playing.
+                    m_ShootingAudio.clip = m_ChargingClip;
+                    m_ShootingAudio.Play ();
+                }
+                // Otherwise, if the fire button is being held and the shell hasn't been launched yet...
+                else if (Input.GetButton (m_FireButton) && !m_Fired)
+                {
+                    // Increment the launch force and update the slider.
+                    m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
 
-                m_AimSlider.value = m_CurrentLaunchForce;
-            }
-            // Otherwise, if the fire button is released and the shell hasn't been launched yet...
-            else if (Input.GetButtonUp (m_FireButton) && !m_Fired)
-            {
-                // ... launch the shell.
-                Fire ();
+                    m_AimSlider.value = m_CurrentLaunchForce;
+                }
+                // Otherwise, if the fire button is released and the shell hasn't been launched yet...
+                else if (Input.GetButtonUp (m_FireButton) && !m_Fired)
+                {
+                    // ... launch the shell.
+                    Fire ();
+                }
             }
         }
 
-
+        [Command]
         private void Fire ()
         {
             // Set the fired flag so only Fire is only called once.
@@ -89,6 +94,8 @@ namespace Complete
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance =
                 Instantiate (m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+
+            NetworkServer.Spawn(shellInstance.gameObject);
 
             // Set the shell's velocity to the launch force in the fire position's forward direction.
             shellInstance.linearVelocity = m_CurrentLaunchForce * m_FireTransform.forward; 

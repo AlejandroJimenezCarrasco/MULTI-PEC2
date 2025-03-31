@@ -1,43 +1,42 @@
 ﻿using UnityEngine;
+using Mirror;
 
 namespace Complete
 {
-    public class TankMovement : MonoBehaviour
+    public class TankMovement : NetworkBehaviour
     {
-        public int m_PlayerNumber = 1;              // Used to identify which tank belongs to which player.  This is set by this tank's manager.
-        public float m_Speed = 12f;                 // How fast the tank moves forward and back.
-        public float m_TurnSpeed = 180f;            // How fast the tank turns in degrees per second.
-        public AudioSource m_MovementAudio;         // Reference to the audio source used to play engine sounds. NB: different to the shooting audio source.
-        public AudioClip m_EngineIdling;            // Audio to play when the tank isn't moving.
-        public AudioClip m_EngineDriving;           // Audio to play when the tank is moving.
-		public float m_PitchRange = 0.2f;           // The amount by which the pitch of the engine noises can vary.
+        [Header("Movimiento")]
+        public int m_PlayerNumber = 1;            // Identifica el tanque del jugador.
+        public float m_Speed = 12f;               // Velocidad de movimiento.
+        public float m_TurnSpeed = 180f;          // Velocidad de giro (grados/segundo).
 
-        private string m_MovementAxisName;          // The name of the input axis for moving forward and back.
-        private string m_TurnAxisName;              // The name of the input axis for turning.
-        private Rigidbody m_Rigidbody;              // Reference used to move the tank.
-        private float m_MovementInputValue;         // The current value of the movement input.
-        private float m_TurnInputValue;             // The current value of the turn input.
-        private float m_OriginalPitch;              // The pitch of the audio source at the start of the scene.
-        private ParticleSystem[] m_particleSystems; // References to all the particles systems used by the Tanks
+        [Header("Audio")]
+        public AudioSource m_MovementAudio;       // Fuente de audio para el motor.
+        public AudioClip m_EngineIdling;          // Sonido cuando el tanque está parado.
+        public AudioClip m_EngineDriving;         // Sonido cuando el tanque se mueve.
+        public float m_PitchRange = 0.2f;         // Rango de variación del pitch.
 
-        private void Awake ()
+        private string m_MovementAxisName;        // Nombre del eje de movimiento.
+        private string m_TurnAxisName;            // Nombre del eje de giro.
+        private Rigidbody m_Rigidbody;            // Referencia al Rigidbody del tanque.
+        private float m_MovementInputValue;       // Valor actual de movimiento.
+        private float m_TurnInputValue;           // Valor actual de giro.
+        private float m_OriginalPitch;            // Pitch original del audio.
+        private ParticleSystem[] m_particleSystems; // Sistemas de partículas del tanque.
+
+        private void Awake()
         {
-            m_Rigidbody = GetComponent<Rigidbody> ();
+            m_Rigidbody = GetComponent<Rigidbody>();
         }
 
-
-        private void OnEnable ()
+        private void OnEnable()
         {
-            // When the tank is turned on, make sure it's not kinematic.
+            // Hacemos que el tanque no sea kinematic para que se mueva.
             m_Rigidbody.isKinematic = false;
-
-            // Also reset the input values.
             m_MovementInputValue = 0f;
             m_TurnInputValue = 0f;
 
-            // We grab all the Particle systems child of that Tank to be able to Stop/Play them on Deactivate/Activate
-            // It is needed because we move the Tank when spawning it, and if the Particle System is playing while we do that
-            // it "think" it move from (0,0,0) to the spawn point, creating a huge trail of smoke
+            // Obtenemos los ParticleSystems hijos para controlarlos al activar/desactivar.
             m_particleSystems = GetComponentsInChildren<ParticleSystem>();
             for (int i = 0; i < m_particleSystems.Length; ++i)
             {
@@ -45,97 +44,85 @@ namespace Complete
             }
         }
 
-
-        private void OnDisable ()
+        private void OnDisable()
         {
-            // When the tank is turned off, set it to kinematic so it stops moving.
+            // Al desactivar, hacemos el Rigidbody kinematic y detenemos los ParticleSystems.
             m_Rigidbody.isKinematic = true;
-
-            // Stop all particle system so it "reset" it's position to the actual one instead of thinking we moved when spawning
-            for(int i = 0; i < m_particleSystems.Length; ++i)
+            for (int i = 0; i < m_particleSystems.Length; ++i)
             {
                 m_particleSystems[i].Stop();
             }
         }
 
-
-        private void Start ()
+        private void Start()
         {
-            // The axes names are based on player number.
+            // Configuramos los nombres de los ejes de entrada basados en el número de jugador.
             m_MovementAxisName = "Vertical" + m_PlayerNumber;
             m_TurnAxisName = "Horizontal" + m_PlayerNumber;
-
-            // Store the original pitch of the audio source.
             m_OriginalPitch = m_MovementAudio.pitch;
         }
 
-
-        private void Update ()
+        private void Update()
         {
-            // Store the value of both input axes.
-            m_MovementInputValue = Input.GetAxis (m_MovementAxisName);
-            m_TurnInputValue = Input.GetAxis (m_TurnAxisName);
+            // Solo procesamos si la aplicación tiene foco.
+            if (!Application.isFocused)
+                return;
 
-            EngineAudio ();
+            // Solo el jugador local controla su tanque.
+            if (isLocalPlayer)
+            {
+                m_MovementInputValue = Input.GetAxis(m_MovementAxisName);
+                m_TurnInputValue = Input.GetAxis(m_TurnAxisName);
+                EngineAudio();
+            }
         }
 
-
-        private void EngineAudio ()
+        private void FixedUpdate()
         {
-            // If there is no input (the tank is stationary)...
-            if (Mathf.Abs (m_MovementInputValue) < 0.1f && Mathf.Abs (m_TurnInputValue) < 0.1f)
+            // Desde el cliente local, enviamos el input al servidor.
+            if (isLocalPlayer)
             {
-                // ... and if the audio source is currently playing the driving clip...
+                CmdMoveTank(m_MovementInputValue, m_TurnInputValue);
+            }
+        }
+
+        // Este Command se ejecuta en el servidor para mover el tanque
+        [Command]
+        void CmdMoveTank(float movementInput, float turnInput)
+        {
+            // Calculamos el vector de movimiento y la rotación.
+            Vector3 movement = transform.forward * movementInput * m_Speed * Time.fixedDeltaTime;
+            float turn = turnInput * m_TurnSpeed * Time.fixedDeltaTime;
+            Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
+
+            // Actualizamos la posición y rotación en el servidor.
+            m_Rigidbody.MovePosition(m_Rigidbody.position + movement);
+            m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
+        }
+
+        // Controla el audio del motor basado en la entrada.
+        private void EngineAudio()
+        {
+            if (Mathf.Abs(m_MovementInputValue) < 0.1f && Mathf.Abs(m_TurnInputValue) < 0.1f)
+            {
+                // Si está inactivo y se está reproduciendo el audio de movimiento, cambiar a inactivo.
                 if (m_MovementAudio.clip == m_EngineDriving)
                 {
-                    // ... change the clip to idling and play it.
                     m_MovementAudio.clip = m_EngineIdling;
-                    m_MovementAudio.pitch = Random.Range (m_OriginalPitch - m_PitchRange, m_OriginalPitch + m_PitchRange);
-                    m_MovementAudio.Play ();
+                    m_MovementAudio.pitch = Random.Range(m_OriginalPitch - m_PitchRange, m_OriginalPitch + m_PitchRange);
+                    m_MovementAudio.Play();
                 }
             }
             else
             {
-                // Otherwise if the tank is moving and if the idling clip is currently playing...
+                // Si se mueve y se está reproduciendo el audio inactivo, cambiar a movimiento.
                 if (m_MovementAudio.clip == m_EngineIdling)
                 {
-                    // ... change the clip to driving and play.
                     m_MovementAudio.clip = m_EngineDriving;
                     m_MovementAudio.pitch = Random.Range(m_OriginalPitch - m_PitchRange, m_OriginalPitch + m_PitchRange);
                     m_MovementAudio.Play();
                 }
             }
-        }
-
-
-        private void FixedUpdate ()
-        {
-            // Adjust the rigidbodies position and orientation in FixedUpdate.
-            Move ();
-            Turn ();
-        }
-
-
-        private void Move ()
-        {
-            // Create a vector in the direction the tank is facing with a magnitude based on the input, speed and the time between frames.
-            Vector3 movement = transform.forward * m_MovementInputValue * m_Speed * Time.deltaTime;
-
-            // Apply this movement to the rigidbody's position.
-            m_Rigidbody.MovePosition(m_Rigidbody.position + movement);
-        }
-
-
-        private void Turn ()
-        {
-            // Determine the number of degrees to be turned based on the input, speed and time between frames.
-            float turn = m_TurnInputValue * m_TurnSpeed * Time.deltaTime;
-
-            // Make this into a rotation in the y axis.
-            Quaternion turnRotation = Quaternion.Euler (0f, turn, 0f);
-
-            // Apply this rotation to the rigidbody's rotation.
-            m_Rigidbody.MoveRotation (m_Rigidbody.rotation * turnRotation);
         }
     }
 }
