@@ -9,9 +9,10 @@
                     "name": "Fire",
                     "type": "Button",
                     "id": "5d50249a-3b1a-48f9-809e-b5cae999d48d",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
-                    "interactions": "Press(behavior=2)"
+                    "interactions": "Press(behavior=2)",
+                    "initialStateCheck": false
                 },
                 {
                     "name": "MoveTank",
@@ -19,7 +20,8 @@
                     "id": "d894d81d-a619-4297-a0db-eb412c9fcaa4",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": ""
+                    "interactions": "",
+                    "initialStateCheck": false
                 },
                 {
                     "name": "TurnTank",
@@ -27,7 +29,8 @@
                     "id": "7a79f75b-47f1-443b-8ef9-9eb3f7a8711a",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": ""
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -116,14 +119,67 @@
             "actions": [
                 {
                     "name": "Click",
-                    "type": "PassThrough",
+                    "type": "Button",
                     "id": "4c97d3fa-624c-40fb-a24a-72177e0f94a7",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
-                    "interactions": "Press"
+                    "interactions": "Press",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Point",
+                    "type": "Value",
+                    "id": "2f2f6335-ecc2-4489-8610-8807eb3c1616",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ESC",
+                    "type": "Button",
+                    "id": "e907c305-88d1-40b6-9229-be280bd5d952",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press",
+                    "initialStateCheck": false
                 }
             ],
-            "bindings": []
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "1183b129-479d-47f7-ae61-f78ac2370d53",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "888287e3-39a7-4a82-83aa-0a2510f52468",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "57f9f701-f872-40ef-89ea-3086b0c0b064",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ESC",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []
