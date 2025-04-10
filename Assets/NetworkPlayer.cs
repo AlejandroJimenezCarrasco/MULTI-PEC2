@@ -1,19 +1,17 @@
 using Mirror;
 using UnityEngine;
+using TMPro;
 
 public class NetworkPlayer : NetworkBehaviour
 {
     [SyncVar(hook = nameof(OnMaterialChanged))] private int materialIndex; // Índice del material sincronizado
-
-    private Renderer[] tanqueRenderers; // Array de Renderers de las diferentes partes del tanque
+    
+    [SyncVar(hook = nameof(OnNameChanged))] private string playerName; // Nombre del jugador sincronizado
+    public Renderer[] tanqueRenderers; // Array de Renderers de las diferentes partes del tanque
 
     public Material[] materiales; // Array de materiales
+    public TextMeshProUGUI nameText;
 
-    private void Start()
-    {
-        // Obtener todos los Renderers de las partes del tanque (chasis, cañón, ruedas, etc.)
-        tanqueRenderers = GetComponentsInChildren<Renderer>();
-    }
 
     // Método para cambiar el material de todas las partes del tanque
     public void SetTanqueMaterial(int nuevoMaterialIndex)
@@ -22,6 +20,20 @@ public class NetworkPlayer : NetworkBehaviour
         {
             CmdSetTanqueMaterial(nuevoMaterialIndex);  // Llamar al comando del servidor para cambiar el material
         }
+    }
+
+    public void SetPlayerName(string nuevoNombre)
+    {
+        if (isLocalPlayer)
+        {
+            CmdSetPlayerName(nuevoNombre);  // Llamar al comando del servidor para cambiar el nombre
+        }
+    }
+
+    [Command]
+    private void CmdSetPlayerName(string nuevoNombre)
+    {
+        playerName = nuevoNombre; // Cambiar el nombre del jugador en el servidor
     }
 
     // Comando ejecutado en el servidor para cambiar el material
@@ -45,8 +57,19 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-    // Método para obtener el índice del material del tanque (opcional si lo necesitas)
-    public int GetTanqueMaterialIndex() => materialIndex;
+    // Hook para cuando el nombre cambie
+    private void OnNameChanged(string oldName, string newName)
+    {
+        // Actualizar el nombre en la UI de todos los clientes
+        if (nameText != null)
+        {
+            nameText.text = newName;
+        }
+    }
+
+   
 }
+
+
 
 

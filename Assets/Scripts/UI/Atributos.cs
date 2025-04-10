@@ -1,40 +1,34 @@
 using UnityEngine;
 using UnityEngine.UI; // Necesario para interactuar con la UI
 using Mirror;
+using TMPro;
 
 public class Atributos : MonoBehaviour
 {
+    public TMP_InputField nombreInputField;
     public GameManager gameManager;
-    public int colorIndexSelected = 3;
+    public int colorIndexSelected = 0;
     // Referencias a los componentes UI
-    public InputField nombreInputField; // Input Field para el nombre del tanque
-    public Button[] botonesColores;    // Array para los botones de colores
-    public Button botonAplicar;        // Botón para aplicar los cambios
+  
+     // Array para los botones de colores
+        // Botón para aplicar los cambios
 
     // Referencia al material del tanque (puedes asignar el material o cambiar el color directamente)
     //public Renderer tanqueRenderer;    // Asegúrate de asignar el Renderer del tanque
 
     // Colores predefinidos para los botones
-    private Color[] colores = new Color[6];
+
 
     private void Start()
     {
-        // Asignar los colores de los botones
-        colores[0] = Color.red;
-        colores[1] = Color.blue;
-        colores[2] = Color.green;
-        colores[3] = Color.yellow;
-        colores[4] = Color.cyan;
-        colores[5] = Color.magenta;
-
-       
+   
 
        
        
     }
 
     // Cambiar el color del tanque basado en el botón presionado
-    private void CambiarColor(int colorIndex)
+    public void CambiarColor(int colorIndex)
     {
         colorIndexSelected = colorIndex;
     }
@@ -51,8 +45,9 @@ public class Atributos : MonoBehaviour
             if (localPlayer != null)
             {
                 // Cambiar el nombre del tanque (si es necesario)
-                
-                
+
+                string nuevoNombre = nombreInputField.text; // Obtener el nombre del InputField
+                localPlayer.SetPlayerName(nuevoNombre); // Llamar al método de NetworkPlayer para cambiar el nombre
 
                 // Cambiar el color del tanque (sincronizado a través de la red)
                 localPlayer.SetTanqueMaterial(colorIndexSelected);
