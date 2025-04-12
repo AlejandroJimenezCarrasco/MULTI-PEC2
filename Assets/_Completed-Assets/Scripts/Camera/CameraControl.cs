@@ -128,5 +128,22 @@ namespace Complete
             // Find and set the required size of the camera.
             m_Camera.orthographicSize = FindRequiredSize ();
         }
+        
+        public void AddTarget(Transform target)
+        {
+            Transform[] targets = new Transform[m_Targets.Length + 1];
+
+            // Copy old targets into the new array
+            for (int i = 0; i < m_Targets.Length; i++)
+            {
+                targets[i] = m_Targets[i];
+            }
+
+            // Add the new one
+            targets[m_Targets.Length] = target;
+
+            // Assign back
+            m_Targets = targets;
+        }
     }
 }

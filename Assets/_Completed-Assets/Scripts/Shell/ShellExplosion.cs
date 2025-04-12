@@ -21,7 +21,7 @@ namespace Complete
         [ServerCallback]
         private void OnTriggerEnter(Collider other)
         {
-            // Lógica de daño y física en el servidor
+            // Lï¿½gica de daï¿½o y fï¿½sica en el servidor
             Collider[] colliders = Physics.OverlapSphere(transform.position, m_ExplosionRadius, m_TankMask);
             for (int i = 0; i < colliders.Length; i++)
             {
@@ -34,12 +34,12 @@ namespace Complete
                 TankHealth targetHealth = targetRigidbody.GetComponent<TankHealth>();
                 if (!targetHealth)
                     continue;
-
+                Debug.Log($"[ShellExplosion] Damaging {targetHealth.gameObject.name} | isServer={targetHealth.isServer} | isClient={targetHealth.isClient}");
                 float damage = CalculateDamage(targetRigidbody.position);
                 targetHealth.TakeDamage(damage);
             }
 
-            // Instanciar y hacer spawn del prefab de la explosión en el servidor
+            // Instanciar y hacer spawn del prefab de la explosiï¿½n en el servidor
             explosionInstance = Instantiate(m_ExplosionPrefab, transform.position, transform.rotation);
             NetworkServer.Spawn(explosionInstance);
 

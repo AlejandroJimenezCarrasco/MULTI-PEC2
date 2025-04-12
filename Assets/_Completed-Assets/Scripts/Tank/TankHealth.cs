@@ -17,7 +17,8 @@ namespace Complete
 
         private AudioSource m_ExplosionAudio;               // The audio source to play when the tank explodes.
         private ParticleSystem m_ExplosionParticles;        // The particle system the will play when the tank is destroyed.
-        private float m_CurrentHealth;                      // How much health the tank currently has.
+        
+        [SyncVar(hook = nameof(OnHealthChanged))] private float m_CurrentHealth;                      // How much health the tank currently has.
         private bool m_Dead;                                // Has the tank been reduced beyond zero health yet?
 
 
@@ -38,6 +39,8 @@ namespace Complete
 
         private void OnEnable()
         {
+            Debug.Log($"[TankHealth] OnEnable: {gameObject.name} | isServer={isServer} | isClient={isClient} | isOwner={isOwned}");
+        
             // When the tank is enabled, reset the tank's health and whether or not it's dead.
             m_CurrentHealth = m_StartingHealth;
             m_Dead = false;
@@ -46,25 +49,35 @@ namespace Complete
             SetHealthUI();
         }
 
-        
+        [Server]
         public void TakeDamage(float amount)
         {
             // Reduce current health by the amount of damage done.
             m_CurrentHealth -= amount;
-
-            // Change the UI elements appropriately.
+            
+        }
+        
+        private void OnHealthChanged(float oldHealth, float newHealth)
+        {
+            m_CurrentHealth = newHealth; // just to be sure
             SetHealthUI();
 
-            // If the current health is at or below zero and it has not yet been registered, call OnDeath.
             if (m_CurrentHealth <= 0f && !m_Dead)
             {
                 OnDeath();
             }
         }
 
-
+        
         private void SetHealthUI()
         {
+            Debug.Log($"[SetHealthUI] Player: {gameObject.name}, Health: {m_CurrentHealth}");
+
+            if (m_Slider == null)
+            {
+                Debug.LogWarning("Health Slider is NULL");
+                return;
+            }
             // Set the slider's value appropriately.
             m_Slider.value = m_CurrentHealth;
 

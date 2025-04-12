@@ -4,7 +4,7 @@ using TMPro;
 
 public class NetworkPlayer : NetworkBehaviour
 {
-    [SyncVar(hook = nameof(OnMaterialChanged))] private int materialIndex; // Õndice del material sincronizado
+    [SyncVar(hook = nameof(OnMaterialChanged))] private int materialIndex; // ÔøΩndice del material sincronizado
     
     [SyncVar(hook = nameof(OnNameChanged))] private string playerName; // Nombre del jugador sincronizado
     public Renderer[] tanqueRenderers; // Array de Renderers de las diferentes partes del tanque
@@ -13,7 +13,7 @@ public class NetworkPlayer : NetworkBehaviour
     public TextMeshProUGUI nameText;
 
 
-    // MÈtodo para cambiar el material de todas las partes del tanque
+    // MÔøΩtodo para cambiar el material de todas las partes del tanque
     public void SetTanqueMaterial(int nuevoMaterialIndex)
     {
         if (isLocalPlayer)
@@ -40,13 +40,13 @@ public class NetworkPlayer : NetworkBehaviour
     [Command]
     private void CmdSetTanqueMaterial(int nuevoMaterialIndex)
     {
-        materialIndex = nuevoMaterialIndex; // Cambiar el Ìndice del material en el servidor
+        materialIndex = nuevoMaterialIndex; // Cambiar el ÔøΩndice del material en el servidor
     }
 
     // Hook para cuando el material cambie
     private void OnMaterialChanged(int oldIndex, int newIndex)
     {
-        // Asegurarnos de que el array de materiales y los Renderers sean v·lidos
+        // Asegurarnos de que el array de materiales y los Renderers sean vÔøΩlidos
         if (tanqueRenderers != null && materiales != null && materiales.Length > newIndex)
         {
             // Aplicar el material en cada parte del tanque
@@ -67,7 +67,17 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-   
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        
+        Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
+
+        if (camControl != null)
+        {
+            camControl.AddTarget(this.transform); // Afegir aquest tank com a target per la c√†mera
+        }
+    }
 }
 
 
