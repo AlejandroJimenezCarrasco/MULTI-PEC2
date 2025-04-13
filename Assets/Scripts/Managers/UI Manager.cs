@@ -1,6 +1,10 @@
 using UnityEngine;
-using Mirror;
 using UnityEngine.SceneManagement;
+using System.Linq;
+using System.Collections.Generic;
+using Mirror; 
+using Mirror.Discovery;
+using UnityEngine.UI;
 
 namespace UIManager // Cambia el namespace si lo necesitas
 {
@@ -9,10 +13,16 @@ namespace UIManager // Cambia el namespace si lo necesitas
     public class CustomNetworkManager : MonoBehaviour
     {
         private NetworkManager manager;
+        public Mirror.Discovery.NetworkDiscovery networkDiscovery;
+        
+        readonly Dictionary<long, ServerResponse> discoveredServers = new Dictionary<long, ServerResponse>();
 
+        public GameObject ServersFound;
+        
         void Awake()
         {
             manager = GetComponent<NetworkManager>();
+            networkDiscovery = GetComponent<Mirror.Discovery.NetworkDiscovery>();
         }
 
         /// <summary>
@@ -20,24 +30,51 @@ namespace UIManager // Cambia el namespace si lo necesitas
         /// </summary>
         public void CrearPartida()
         {
-            manager.StartHost();
-            manager.ServerChangeScene("_Complete - Game");
+            Debug.Log("[CustomNetworkManager] Creant partida com a host...");
+            discoveredServers.Clear();
+            NetworkManager.singleton.StartHost();
+            networkDiscovery.AdvertiseServer();
         }
-
+        
         /// <summary>
         /// Se conecta como cliente a una partida existente.
         /// </summary>
         public void UnirseAPartida()
         {
-            manager.StartClient();
+            Debug.Log("[CustomNetworkManager] Buscant servidors a la LAN...");
+            discoveredServers.Clear();
+            networkDiscovery.StartDiscovery();
+            
+            ServersFound.SetActive(true);
         }
-
         /// <summary>
         /// Inicia el servidor sin un cliente.
         /// </summary>
         public void CrearServidor()
         {
-            manager.StartServer();
+            discoveredServers.Clear();
+            NetworkManager.singleton.StartServer();
+            networkDiscovery.AdvertiseServer();
+        }
+        
+        void Connect(ServerResponse info)
+        {
+            networkDiscovery.StopDiscovery();
+            NetworkManager.singleton.StartClient(info.uri);
+        }
+
+        public void OnDiscoveredServer(ServerResponse info)
+        {
+            Debug.Log($"Discovered Server: {info.serverId} | {info.EndPoint} | {info.uri}");
+            
+            discoveredServers[info.serverId] = info;
+            
+            UnityEngine.UI.Button connectButton = ServersFound.GetComponentInChildren<UnityEngine.UI.Button>();
+            connectButton.GetComponentInChildren<Text>().text = info.EndPoint.Address.ToString();
+
+            
+            connectButton.onClick.RemoveAllListeners();
+            connectButton.onClick.AddListener(() => Connect(info));
         }
     }
 }
