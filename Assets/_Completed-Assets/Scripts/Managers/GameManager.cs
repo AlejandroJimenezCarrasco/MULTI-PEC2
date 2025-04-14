@@ -3,8 +3,9 @@ using System.Collections;
 //using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Complete;
+using Mirror;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     public int numberPlayers;
     public int m_NumRoundsToWin = 5;
@@ -14,6 +15,9 @@ public class GameManager : MonoBehaviour
     public Text m_MessageText;
     public GameObject m_TankPrefab;
     public Complete.TankManager[] m_Tanks;
+    
+    public NPCManager[] m_NPCs;
+    public GameObject m_NPCsPrefab;
     public CameraManager cameraManager;
 
 
@@ -24,7 +28,7 @@ public class GameManager : MonoBehaviour
     private TankManager m_GameWinner;
 
 
-    private void Start()
+    public override void OnStartServer()
     {
 
         m_StartWait = new WaitForSeconds(m_StartDelay);
@@ -32,6 +36,7 @@ public class GameManager : MonoBehaviour
 
         SpawnAllTanks();
         //SetCameraTargets();
+        SpawnAllNPCs();
 
         StartCoroutine(GameLoop());
     }
@@ -45,6 +50,30 @@ public class GameManager : MonoBehaviour
                 Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
             m_Tanks[i].m_PlayerNumber = i + 1;
             m_Tanks[i].Setup();
+        }
+    }
+    [Server]
+    private void SpawnAllNPCs()
+    {
+        Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
+
+        
+        for (int i = 0; i < 4; i++)
+        {
+            m_NPCs[i].m_Instance =
+                Instantiate(m_NPCsPrefab, m_NPCs[i].m_SpawnPoint.position, m_NPCs[i].m_SpawnPoint.rotation) as GameObject;
+            //m_NPCs[i].m_PlayerNumber = i + 1;
+            NetworkServer.Spawn(m_NPCs[i].m_Instance);
+            m_NPCs[i].Setup();
+            
+            
+            
+            if (camControl != null)
+            {
+                camControl.AddTarget(m_NPCs[i].m_Instance.transform); // Afegir aquest tank com a target per la càmera
+            }
+
+			
         }
     }
 
@@ -163,6 +192,14 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < m_Tanks.Length; i++)
         {
             m_Tanks[i].Reset();
+        }
+    }
+
+    private void ResetAllNPCs()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            m_NPCs[i].Reset();
         }
     }
 
