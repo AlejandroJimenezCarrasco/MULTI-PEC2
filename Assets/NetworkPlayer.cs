@@ -4,21 +4,19 @@ using TMPro;
 
 public class NetworkPlayer : NetworkBehaviour
 {
-    [SyncVar(hook = nameof(OnMaterialChanged))] private int materialIndex; // �ndice del material sincronizado
-    
-    [SyncVar(hook = nameof(OnNameChanged))] private string playerName; // Nombre del jugador sincronizado
-    public Renderer[] tanqueRenderers; // Array de Renderers de las diferentes partes del tanque
+    [SyncVar(hook = nameof(OnMaterialChanged))] private int materialIndex;
 
-    public Material[] materiales; // Array de materiales
+    [SyncVar(hook = nameof(OnNameChanged))] private string playerName;
+    public Renderer[] tanqueRenderers;
+
+    public Material[] materiales; // [0] = azul, [1] = rojo
     public TextMeshProUGUI nameText;
 
-
-    // M�todo para cambiar el material de todas las partes del tanque
     public void SetTanqueMaterial(int nuevoMaterialIndex)
     {
         if (isLocalPlayer)
         {
-            CmdSetTanqueMaterial(nuevoMaterialIndex);  // Llamar al comando del servidor para cambiar el material
+            CmdSetTanqueMaterial(nuevoMaterialIndex);
         }
     }
 
@@ -26,41 +24,35 @@ public class NetworkPlayer : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            CmdSetPlayerName(nuevoNombre);  // Llamar al comando del servidor para cambiar el nombre
+            CmdSetPlayerName(nuevoNombre);
         }
     }
 
     [Command]
     private void CmdSetPlayerName(string nuevoNombre)
     {
-        playerName = nuevoNombre; // Cambiar el nombre del jugador en el servidor
+        playerName = nuevoNombre;
     }
 
-    // Comando ejecutado en el servidor para cambiar el material
     [Command]
     private void CmdSetTanqueMaterial(int nuevoMaterialIndex)
     {
-        materialIndex = nuevoMaterialIndex; // Cambiar el �ndice del material en el servidor
+        materialIndex = nuevoMaterialIndex;
     }
 
-    // Hook para cuando el material cambie
     private void OnMaterialChanged(int oldIndex, int newIndex)
     {
-        // Asegurarnos de que el array de materiales y los Renderers sean v�lidos
         if (tanqueRenderers != null && materiales != null && materiales.Length > newIndex)
         {
-            // Aplicar el material en cada parte del tanque
             foreach (var renderer in tanqueRenderers)
             {
-                renderer.material = materiales[newIndex]; // Cambiar el material de cada Renderer
+                renderer.material = materiales[newIndex];
             }
         }
     }
 
-    // Hook para cuando el nombre cambie
     private void OnNameChanged(string oldName, string newName)
     {
-        // Actualizar el nombre en la UI de todos los clientes
         if (nameText != null)
         {
             nameText.text = newName;
@@ -70,15 +62,39 @@ public class NetworkPlayer : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        
-        Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
 
+        Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
         if (camControl != null)
         {
-            camControl.AddTarget(this.transform); // Afegir aquest tank com a target per la càmera
+            camControl.AddTarget(this.transform);
+        }
+
+        // Si NO es el jugador local, forzar a rojo (índice 1)
+        if (!isLocalPlayer)
+        {
+            // No tocamos el SyncVar para no sobrescribir materialIndex global
+            if (tanqueRenderers != null && materiales.Length > 1)
+            {
+                foreach (var renderer in tanqueRenderers)
+                {
+                    renderer.material = materiales[4]; // Rojo
+                }
+            }
         }
     }
+
+    public override void OnStartLocalPlayer()
+    {
+        base.OnStartLocalPlayer();
+
+        // Asignar nombre único
+        SetPlayerName("Jugador " + netId);
+
+        // Forzar color azul (índice 0)
+        
+    }
 }
+
 
 
 

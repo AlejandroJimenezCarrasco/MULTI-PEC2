@@ -135,7 +135,7 @@ namespace Mirror
 
         [Header("Interpolation UI - Requires Editor / Dev Build")]
         public bool timeInterpolationGui = false;
-
+        public List<Transform> spawnPoints = new List<Transform>();
         /// <summary>The one and only NetworkManager</summary>
         public static NetworkManager singleton { get; internal set; }
 
@@ -224,15 +224,10 @@ namespace Mirror
         public virtual void Start()
         {
             // Auto-start headless server or client.
-            //
-            // We can't do this in Awake because Awake is for initialization
-            // and some transports might not be ready until Start.
-            //
-            // Auto-starting in Editor is useful for debugging, so that can
-            // be enabled with editorAutoStart.
             if (Utils.IsHeadless())
             {
                 if (!Application.isEditor || editorAutoStart)
+                {
                     switch (headlessStartMode)
                     {
                         case HeadlessStartOptions.AutoStartServer:
@@ -242,6 +237,46 @@ namespace Mirror
                             StartClient();
                             break;
                     }
+                }
+            }
+
+            // Si estamos en el lobby, no buscamos los puntos de spawn aún
+            if (SceneManager.GetActiveScene().name != "Scene0")
+            {
+                // Solo buscar spawn points si estamos en la escena de juego
+                spawnPoints = GameObject.FindGameObjectsWithTag("Respawn")
+                                       .Select(go => go.transform)
+                                       .ToList();
+
+                if (spawnPoints.Count == 0)
+                {
+                    Debug.LogWarning("No spawn points found in the scene. Please ensure that objects with the 'SpawnPoint' tag are present.");
+                }
+            }
+            else
+            {
+                // Escuchar cuando se carga la escena del juego
+                SceneManager.sceneLoaded += OnGameSceneLoaded;
+            }
+        }
+
+        // Este método se llamará cuando la escena de juego se cargue
+        private void OnGameSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Solo proceder si es la escena del juego
+            if (scene.name == "_Complete-Game") // Cambia "GameScene" por el nombre real de tu escena de juego
+            {
+                spawnPoints = GameObject.FindGameObjectsWithTag("Respawn")
+                                       .Select(go => go.transform)
+                                       .ToList();
+
+                if (spawnPoints.Count == 0)
+                {
+                    Debug.LogWarning("No spawn points found in the scene. Please ensure that objects with the 'SpawnPoint' tag are present.");
+                }
+
+                // Desconectar el callback para evitar que se ejecute cada vez
+                SceneManager.sceneLoaded -= OnGameSceneLoaded;
             }
         }
 
