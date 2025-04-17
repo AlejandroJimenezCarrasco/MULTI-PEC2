@@ -1,6 +1,7 @@
 using Mirror;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class NetworkPlayer : NetworkBehaviour
 {
@@ -11,7 +12,9 @@ public class NetworkPlayer : NetworkBehaviour
 
     public Material[] materiales; // [0] = azul, [1] = rojo
     public TextMeshProUGUI nameText;
-
+    public GameObject endMessageCanvasPrefab;
+    public Text endMessageText;
+    public GameObject returnToMenu;
     public void SetTanqueMaterial(int nuevoMaterialIndex)
     {
         if (isLocalPlayer)
@@ -92,6 +95,36 @@ public class NetworkPlayer : NetworkBehaviour
 
         // Forzar color azul (índice 0)
         
+    }
+
+	public override void OnStartServer()
+    {
+        base.OnStartServer();
+
+        GameManager gm = FindObjectOfType<GameManager>();
+        if (gm != null)
+        {
+            gm.RegisterTank(this); 
+        }
+    }
+    [TargetRpc]
+    public void TargetShowEndMessage(NetworkConnection target, string message)
+    {
+        ShowEndMessage(message); 
+    }
+    [Client]
+    public void ShowEndMessage(string message)
+    {
+        if (!isLocalPlayer) return;
+        Instantiate(endMessageCanvasPrefab);
+        Instantiate(returnToMenu);
+        
+        endMessageText = endMessageCanvasPrefab.GetComponentInChildren<Text>();
+        
+        if (endMessageCanvasPrefab != null && endMessageText != null)
+        {
+            endMessageText.text = message;
+        }
     }
 }
 

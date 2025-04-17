@@ -21,6 +21,12 @@ public class NetworkNPC : NetworkBehaviour
         // Apply initial state
         OnColorChanged(Color.clear, npcColor);
         OnNameChanged("", npcName);
+		
+		Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
+        if (camControl != null)
+        {
+            camControl.AddTarget(transform);
+        }
     }
 
     void OnColorChanged(Color _, Color newColor)

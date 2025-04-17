@@ -34,7 +34,7 @@ namespace Complete
                 TankHealth targetHealth = targetRigidbody.GetComponent<TankHealth>();
                 if (!targetHealth)
                     continue;
-                Debug.Log($"[ShellExplosion] Damaging {targetHealth.gameObject.name} | isServer={targetHealth.isServer} | isClient={targetHealth.isClient}");
+                
                 float damage = CalculateDamage(targetRigidbody.position);
                 targetHealth.TakeDamage(damage);
             }
@@ -42,9 +42,7 @@ namespace Complete
             // Instanciar y hacer spawn del prefab de la explosi�n en el servidor
             explosionInstance = Instantiate(m_ExplosionPrefab, transform.position, transform.rotation);
             NetworkServer.Spawn(explosionInstance);
-
-           
-
+            
             // Destruir la shell en el servidor
             Destroy(gameObject);
         }

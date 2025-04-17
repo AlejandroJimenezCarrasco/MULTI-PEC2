@@ -42,28 +42,14 @@ using UnityEngine;
                 renderers[i].material.color = m_PlayerColor;
             }
 			
-			var sync = m_Instance.GetComponent<NetworkNPC>();
-			if (sync != null)
+			var networkNpc = m_Instance.GetComponent<NetworkNPC>();
+			if (networkNpc != null)
     		{
-        		sync.npcColor = m_PlayerColor;
-        		sync.npcName = m_ColoredPlayerText;
+			    networkNpc.npcColor = m_PlayerColor;
+			    networkNpc.npcName = m_ColoredPlayerText;
     		}
-            
-            
+			
         }
-
-
         
-
-
-        // Used at the start of each round to put the tank into it's default state.
-        public void Reset ()
-        {
-            m_Instance.transform.position = m_SpawnPoint.position;
-            m_Instance.transform.rotation = m_SpawnPoint.rotation;
-
-            m_Instance.SetActive (false);
-            m_Instance.SetActive (true);
-        }
     }
 

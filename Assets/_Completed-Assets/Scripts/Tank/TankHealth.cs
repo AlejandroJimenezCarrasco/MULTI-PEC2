@@ -39,27 +39,43 @@ namespace Complete
 
         private void OnEnable()
         {
-            Debug.Log($"[TankHealth] OnEnable: {gameObject.name} | isServer={isServer} | isClient={isClient} | isOwner={isOwned}");
-        
             // When the tank is enabled, reset the tank's health and whether or not it's dead.
-            m_CurrentHealth = m_StartingHealth;
+            //if(isServer)m_CurrentHealth = m_StartingHealth;
             m_Dead = false;
 
             // Update the health slider's value and color.
-            SetHealthUI();
+            //SetHealthUI();
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            m_CurrentHealth = m_StartingHealth;
         }
 
         [Server]
         public void TakeDamage(float amount)
         {
             // Reduce current health by the amount of damage done.
-            m_CurrentHealth -= amount;
-            
+           //m_CurrentHealth -= amount;
+           //m_CurrentHealth = Mathf.Max(0, m_CurrentHealth - amount);
+           float newHealth = Mathf.Max(0, m_CurrentHealth - amount);
+
+           if (Mathf.Approximately(newHealth, m_CurrentHealth))
+               return; // no canvi real
+
+           m_CurrentHealth = newHealth;
+           
+           if(connectionToClient != null) ClientUpdateHealth(connectionToClient, newHealth);
         }
-        
+        [TargetRpc]
+        void ClientUpdateHealth(NetworkConnection target, float newHealth)
+        {
+            m_CurrentHealth = newHealth;
+            SetHealthUI();
+        }
         private void OnHealthChanged(float oldHealth, float newHealth)
         {
-            m_CurrentHealth = newHealth; // just to be sure
             SetHealthUI();
 
             if (m_CurrentHealth <= 0f && !m_Dead)
@@ -71,13 +87,6 @@ namespace Complete
         
         private void SetHealthUI()
         {
-            Debug.Log($"[SetHealthUI] Player: {gameObject.name}, Health: {m_CurrentHealth}");
-
-            if (m_Slider == null)
-            {
-                Debug.LogWarning("Health Slider is NULL");
-                return;
-            }
             // Set the slider's value appropriately.
             m_Slider.value = m_CurrentHealth;
 
@@ -101,9 +110,58 @@ namespace Complete
             // Play the tank explosion sound effect.
             m_ExplosionAudio.Play();
 
-            // Turn the tank off.
-            gameObject.SetActive(false);
-            //gameManager.ActiveButtons(this);
+            DeactivateTankVisuals(this.gameObject);
+            RpcHandleDeath();
+			HandleActivePlayers();
         }
+        public void DeactivateTankVisuals(GameObject completeTank)
+        {
+            Transform renderers = completeTank.transform.Find("TankRenderers");
+            Transform canvas = completeTank.transform.Find("Canvas");
+            if (renderers != null && canvas != null)
+            {
+                renderers.gameObject.SetActive(false);
+                canvas.gameObject.SetActive(false);
+            }
+            var camControl = FindObjectOfType<CameraControl>();
+            if (camControl != null)
+            {
+                camControl.RemoveTarget(transform); 
+            }
+        }
+        [ClientRpc]
+        void RpcHandleDeath()
+        {
+            if (m_Dead) return;
+
+            m_Dead = true;
+            DeactivateTankVisuals(this.gameObject);
+            
+            if (m_ExplosionParticles != null)
+            {
+                m_ExplosionParticles.transform.position = transform.position;
+                m_ExplosionParticles.gameObject.SetActive(true);
+                m_ExplosionParticles.Play();
+            }
+
+            if (m_ExplosionAudio != null)
+            {
+                m_ExplosionAudio.Play();
+            }
+
+            
+        }
+		void HandleActivePlayers()
+		{
+			NetworkPlayer np = GetComponent<NetworkPlayer>();
+            if (np != null)
+            {
+                GameManager gm = FindObjectOfType<GameManager>();
+                if (gm != null)
+                {
+                    gm.UnregisterTank(np);
+                }
+            }       
+    	}
     }
 }

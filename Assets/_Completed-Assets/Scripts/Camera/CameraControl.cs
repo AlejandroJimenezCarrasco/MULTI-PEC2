@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace Complete
 {
@@ -144,6 +146,23 @@ namespace Complete
 
             // Assign back
             m_Targets = targets;
+            
         }
+        
+        public void RemoveTarget(Transform target)
+        {
+            List<Transform> newTargets = new List<Transform>();
+
+            foreach (Transform t in m_Targets)
+            {
+                if (t != target && t != null)
+                {
+                    newTargets.Add(t);
+                }
+            }
+
+            m_Targets = newTargets.ToArray();
+        }
+
     }
 }

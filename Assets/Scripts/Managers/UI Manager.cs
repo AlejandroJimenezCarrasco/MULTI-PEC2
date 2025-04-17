@@ -12,8 +12,7 @@ namespace UIManager // Cambia el namespace si lo necesitas
     [RequireComponent(typeof(NetworkManager))]
     public class CustomNetworkManager : MonoBehaviour
     {
-        private NetworkManager manager;
-        public Mirror.Discovery.NetworkDiscovery networkDiscovery;
+        public NetworkDiscovery networkDiscovery;
         
         readonly Dictionary<long, ServerResponse> discoveredServers = new Dictionary<long, ServerResponse>();
 
@@ -21,8 +20,7 @@ namespace UIManager // Cambia el namespace si lo necesitas
         
         void Awake()
         {
-            manager = GetComponent<NetworkManager>();
-            networkDiscovery = GetComponent<Mirror.Discovery.NetworkDiscovery>();
+            networkDiscovery = GetComponent<NetworkDiscovery>();
         }
 
         /// <summary>
@@ -30,7 +28,6 @@ namespace UIManager // Cambia el namespace si lo necesitas
         /// </summary>
         public void CrearPartida()
         {
-            Debug.Log("[CustomNetworkManager] Creant partida com a host...");
             discoveredServers.Clear();
             NetworkManager.singleton.StartHost();
             networkDiscovery.AdvertiseServer();
@@ -41,7 +38,6 @@ namespace UIManager // Cambia el namespace si lo necesitas
         /// </summary>
         public void UnirseAPartida()
         {
-            Debug.Log("[CustomNetworkManager] Buscant servidors a la LAN...");
             discoveredServers.Clear();
             networkDiscovery.StartDiscovery();
             
@@ -62,19 +58,17 @@ namespace UIManager // Cambia el namespace si lo necesitas
             networkDiscovery.StopDiscovery();
             NetworkManager.singleton.StartClient(info.uri);
         }
-
+        
         public void OnDiscoveredServer(ServerResponse info)
         {
-            Debug.Log($"Discovered Server: {info.serverId} | {info.EndPoint} | {info.uri}");
-            
             discoveredServers[info.serverId] = info;
             
             UnityEngine.UI.Button connectButton = ServersFound.GetComponentInChildren<UnityEngine.UI.Button>();
             connectButton.GetComponentInChildren<Text>().text = info.EndPoint.Address.ToString();
-
             
             connectButton.onClick.RemoveAllListeners();
             connectButton.onClick.AddListener(() => Connect(info));
         }
+
     }
 }
