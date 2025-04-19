@@ -69,6 +69,8 @@ namespace UIManager // Cambia el namespace si lo necesitas
             connectButton.onClick.RemoveAllListeners();
             connectButton.onClick.AddListener(() => Connect(info));
         }
+        
+        
 
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using TMPro;
@@ -65,7 +67,7 @@ public class NetworkPlayer : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-
+        
         Complete.CameraControl camControl = FindObjectOfType<Complete.CameraControl>();
         if (camControl != null)
         {
@@ -80,7 +82,7 @@ public class NetworkPlayer : NetworkBehaviour
             {
                 foreach (var renderer in tanqueRenderers)
                 {
-                    renderer.material = materiales[4]; // Rojo
+                    renderer.material = materiales[5]; // Rojo
                 }
             }
         }
@@ -96,17 +98,28 @@ public class NetworkPlayer : NetworkBehaviour
         // Forzar color azul (índice 0)
         
     }
-
+    
 	public override void OnStartServer()
     {
         base.OnStartServer();
-
+        
+        StartCoroutine(SetPlayerNameNextFrame());
+        OnMaterialChanged(0, materialIndex);
+        
         GameManager gm = FindObjectOfType<GameManager>();
         if (gm != null)
         {
             gm.RegisterTank(this); 
         }
     }
+    
+    private IEnumerator SetPlayerNameNextFrame()
+    {
+        yield return null; // espera un frame
+        playerName = "Jugador " + netId;
+        OnNameChanged("", playerName); // força la visual al servidor
+    }
+    
     [TargetRpc]
     public void TargetShowEndMessage(NetworkConnection target, string message)
     {

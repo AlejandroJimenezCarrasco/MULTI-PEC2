@@ -105,6 +105,8 @@ namespace Complete
                 else if (FireButton(2) && !m_Fired)
                 {
                     // ... launch the shell.
+                    if (m_CurrentLaunchForce <= m_MinLaunchForce * 0.5f)
+                        return;
                     Fire ();
                 }
             }
@@ -115,7 +117,7 @@ namespace Complete
         {
             // Set the fired flag so only Fire is only called once.
             m_Fired = true;
-
+            
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance;
 
@@ -123,7 +125,17 @@ namespace Complete
                 Instantiate (m_ShellAlt, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
             else shellInstance =
                 Instantiate (m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+            
+            shellInstance.transform.position += m_FireTransform.forward * 1f;
 
+            
+            Collider tankCollider = GetComponentInChildren<Collider>();
+            Collider shellCollider = shellInstance.GetComponent<Collider>();
+            if (tankCollider != null && shellCollider != null)
+            {
+                Physics.IgnoreCollision(shellCollider, tankCollider);
+
+            }
             NetworkServer.Spawn(shellInstance.gameObject);
 
             // Set the shell's velocity to the launch force in the fire position's forward direction.

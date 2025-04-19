@@ -24,6 +24,7 @@ public class GameManager : NetworkBehaviour
     private TankManager m_RoundWinner;
     private TankManager m_GameWinner;
 	private List<NetworkPlayer> players = new List<NetworkPlayer>();
+    private bool gameEnded = false;
 
     public override void OnStartServer()
     {
@@ -51,8 +52,10 @@ public class GameManager : NetworkBehaviour
         {
             players.Remove(tank);
 
-            if (players.Count == 1)
+            if (players.Count == 1 && !gameEnded)
             {
+                gameEnded = true;
+                
                 NetworkPlayer winner = players[0];
 
                 winner.TargetShowEndMessage(winner.connectionToClient, "You Win");

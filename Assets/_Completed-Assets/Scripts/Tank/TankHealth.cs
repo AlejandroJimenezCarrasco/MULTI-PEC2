@@ -51,6 +51,7 @@ namespace Complete
         {
             base.OnStartServer();
             m_CurrentHealth = m_StartingHealth;
+            SetHealthUI();
         }
 
         [Server]
