@@ -40,11 +40,8 @@ namespace Complete
         private void OnEnable()
         {
             // When the tank is enabled, reset the tank's health and whether or not it's dead.
-            //if(isServer)m_CurrentHealth = m_StartingHealth;
             m_Dead = false;
 
-            // Update the health slider's value and color.
-            //SetHealthUI();
         }
 
         public override void OnStartServer()
@@ -57,13 +54,11 @@ namespace Complete
         [Server]
         public void TakeDamage(float amount)
         {
-            // Reduce current health by the amount of damage done.
-           //m_CurrentHealth -= amount;
-           //m_CurrentHealth = Mathf.Max(0, m_CurrentHealth - amount);
+            //Cambiamos este metodo para que OnHealthChange se llamase
            float newHealth = Mathf.Max(0, m_CurrentHealth - amount);
 
            if (Mathf.Approximately(newHealth, m_CurrentHealth))
-               return; // no canvi real
+               return; 
 
            m_CurrentHealth = newHealth;
            
@@ -112,7 +107,7 @@ namespace Complete
             m_ExplosionAudio.Play();
 
             DeactivateTankVisuals(this.gameObject);
-            RpcHandleDeath();
+            ClientDeath();
 			HandleActivePlayers();
         }
         public void DeactivateTankVisuals(GameObject completeTank)
@@ -131,12 +126,12 @@ namespace Complete
             }
         }
         [ClientRpc]
-        void RpcHandleDeath()
+        void ClientDeath()
         {
             if (m_Dead) return;
 
             m_Dead = true;
-            DeactivateTankVisuals(this.gameObject);
+            DeactivateTankVisuals(gameObject);
             
             if (m_ExplosionParticles != null)
             {

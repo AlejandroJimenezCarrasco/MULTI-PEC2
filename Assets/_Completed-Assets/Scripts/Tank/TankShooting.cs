@@ -128,7 +128,7 @@ namespace Complete
             
             shellInstance.transform.position += m_FireTransform.forward * 1f;
 
-            
+            //Con m_ShellAlt teniamos problemas que se nos explotaba en el tanque que disparaba, entonces hemos hecho que si hay collision en el mismo tanque que se ignore
             Collider tankCollider = GetComponentInChildren<Collider>();
             Collider shellCollider = shellInstance.GetComponent<Collider>();
             if (tankCollider != null && shellCollider != null)

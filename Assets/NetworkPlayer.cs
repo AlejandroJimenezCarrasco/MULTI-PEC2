@@ -103,6 +103,7 @@ public class NetworkPlayer : NetworkBehaviour
     {
         base.OnStartServer();
         
+        //Logica para cuando se cree un servidor, ya que sin un jugador local no se estaba actualizando el nombre ni el material
         StartCoroutine(SetPlayerNameNextFrame());
         OnMaterialChanged(0, materialIndex);
         
@@ -115,9 +116,9 @@ public class NetworkPlayer : NetworkBehaviour
     
     private IEnumerator SetPlayerNameNextFrame()
     {
-        yield return null; // espera un frame
+        yield return null; 
         playerName = "Jugador " + netId;
-        OnNameChanged("", playerName); // força la visual al servidor
+        OnNameChanged("", playerName); 
     }
     
     [TargetRpc]
